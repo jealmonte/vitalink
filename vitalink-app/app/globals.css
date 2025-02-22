@@ -1,0 +1,98 @@
+@import "react-big-calendar/lib/css/react-big-calendar.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 17%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 13%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 19%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 284.2 76.8% 73.5%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 19%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 26%;
+    --muted-foreground: 0 0% 100%;
+    --accent: 0 0% 13%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 19%;
+    --input: 0 0% 19%;
+    --ring: 284.2 76.8% 73.5%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+}
+
+/* Custom styles for react-big-calendar */
+.rbc-calendar {
+  background-color: #2c2c2c;
+  color: #ffffff;
+}
+
+.rbc-header {
+  background-color: #212121;
+  color: #ffffff;
+  border-color: #303030;
+}
+
+.rbc-event {
+  background-color: #c48aed;
+  color: white;
+}
+
+.rbc-today {
+  background-color: #303030;
+}
+
+.rbc-button-link {
+  color: #ffffff;
+}
+
+.rbc-off-range-bg {
+  background-color: #212121;
+}
+
+.rbc-month-view,
+.rbc-time-view,
+.rbc-agenda-view,
+.rbc-day-bg + .rbc-day-bg,
+.rbc-month-row + .rbc-month-row,
+.rbc-timeslot-group,
+.rbc-time-content > * + * > *,
+.rbc-time-header-content,
+.rbc-time-content,
+.rbc-agenda-view table.rbc-agenda-table,
+.rbc-agenda-view table.rbc-agenda-table tbody > tr > td + td {
+  border-color: #303030;
+}
+
+.rbc-day-slot .rbc-time-slot {
+  border-color: #303030;
+}
+
+.rbc-time-view-resources .rbc-time-gutter,
+.rbc-time-view-resources .rbc-time-header-gutter {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.rbc-agenda-content {
+  background-color: #2c2c2c;
+}
+
