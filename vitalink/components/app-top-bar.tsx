@@ -2,8 +2,8 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { usePathname } from "next/navigation"
-import { Settings, Bell, User, LayoutDashboard, Compass, MessageSquare } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { Settings, Bell, User, LayoutDashboard, Compass, MessageSquare, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const menuItems = [
@@ -14,6 +14,11 @@ const menuItems = [
 
 export function AppTopBar() {
   const pathname = usePathname()
+  const router = useRouter();
+  const handleLogout = () => {
+    // Perform any necessary cleanup (e.g., clearing tokens)
+    router.push("/"); // Redirect to landing page
+  };
 
   return (
     <div className="flex items-center justify-between px-4 py-2 bg-accent text-white">
@@ -54,6 +59,9 @@ export function AppTopBar() {
         </Button>
         <Button variant="ghost" size="icon">
           <User className="h-5 w-5" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={handleLogout}>
+          <LogOut className="h-5 w-5" />
         </Button>
       </div>
     </div>
