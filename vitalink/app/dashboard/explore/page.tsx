@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React from "react"
 import {
   MapPin,
   Users,
@@ -25,6 +25,12 @@ import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import Image from "next/image"
+import { useEffect } from "react"
+import { useState } from "react"
+import { GoogleMap, useLoadScript, Marker, InfoWindow } from "@react-google-maps/api"
+
+
+const GOOGLE_MAPS_API_KEY = "AIzaSyAGoHoDm7rPzg9nq6eqWrqCvJkEHSNcEAk" // Replace with your actual API key
 
 interface ChatMessage {
   id: number
@@ -44,107 +50,63 @@ interface ChatThread {
   peoplePresent: number
 }
 
-export default function ExplorePage() {
-  const [walkingMode, setWalkingMode] = useState(false)
-  const [intensity, setIntensity] = useState(50)
-  const [sortBy, setSortBy] = useState("recent")
-  const [selectedThread, setSelectedThread] = useState<ChatThread | null>(null)
-  const [newMessage, setNewMessage] = useState("")
-  const [newThreadTitle, setNewThreadTitle] = useState("")
-  const [showNewThreadDialog, setShowNewThreadDialog] = useState(false)
-  const [showDirectMessageDialog, setShowDirectMessageDialog] = useState(false)
-  const [directMessageRecipient, setDirectMessageRecipient] = useState("")
-  const [directMessage, setDirectMessage] = useState("")
-  const [showMapDialog, setShowMapDialog] = useState(false)
-  const [selectedMapThread, setSelectedMapThread] = useState<ChatThread | null>(null)
+const mapContainerStyle = {
+  width: '100%',
+  height: '100%',
+  borderRadius: '0.5rem'
+}
 
+const defaultCenter = {
+  lat: 38.0293, // Charlottesville coordinates
+  lng: -78.4767
+}
+
+export default function ExplorePage() {
+  // Use React.useState instead of useState directly
+  const [walkingMode, setWalkingMode] = React.useState(false)
+  const [intensity, setIntensity] = React.useState(50)
+  const [sortBy, setSortBy] = React.useState("recent")
+  const [selectedThread, setSelectedThread] = React.useState<ChatThread | null>(null)
+  const [newMessage, setNewMessage] = React.useState("")
+  const [newThreadTitle, setNewThreadTitle] = React.useState("")
+  const [showNewThreadDialog, setShowNewThreadDialog] = React.useState(false)
+  const [showDirectMessageDialog, setShowDirectMessageDialog] = React.useState(false)
+  const [directMessageRecipient, setDirectMessageRecipient] = React.useState("")
+  const [directMessage, setDirectMessage] = React.useState("")
+  const [showMapDialog, setShowMapDialog] = React.useState(false)
+  const [selectedMapThread, setSelectedMapThread] = React.useState<ChatThread | null>(null)
+  
+  // New state for Google Maps
+  const [selectedMapLocation, setSelectedMapLocation] = React.useState<ChatThread | null>(null)
+  const [userLocation, setUserLocation] = React.useState<{ lat: number; lng: number } | null>(null)
+
+  // Load Google Maps
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY
+  })
+
+  // Get user's location
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          })
+        },
+        (error) => {
+          console.error("Error getting location:", error)
+        }
+      )
+    }
+  }, [])
+
+  // Existing helper functions
   const toggleWalkingMode = () => {
     setWalkingMode(!walkingMode)
     console.log(`Walking mode ${walkingMode ? "deactivated" : "activated"} with intensity: ${intensity}`)
   }
-
-  const chatThreads: ChatThread[] = [
-    {
-      id: 1,
-      title: "Central Park Meetup",
-      messages: [
-        {
-          id: 1,
-          user: "Alice",
-          avatar: "A",
-          message: "Anyone up for a walk in Central Park?",
-          timestamp: new Date("2023-05-10T10:00:00"),
-        },
-        {
-          id: 2,
-          user: "Bob",
-          avatar: "B",
-          message: "I'm in! What time are you thinking?",
-          timestamp: new Date("2023-05-10T10:05:00"),
-        },
-        { id: 3, user: "Alice", avatar: "A", message: "How about 3 PM?", timestamp: new Date("2023-05-10T10:07:00") },
-      ],
-      location: "Central Park",
-      popularity: 15,
-      coordinates: { lat: 40.7829, lng: -73.9654 },
-      peoplePresent: 5,
-    },
-    {
-      id: 2,
-      title: "Yoga at Community Center",
-      messages: [
-        {
-          id: 1,
-          user: "Charlie",
-          avatar: "C",
-          message: "Just finished a great yoga session at the community center!",
-          timestamp: new Date("2023-05-10T11:30:00"),
-        },
-        {
-          id: 2,
-          user: "Diana",
-          avatar: "D",
-          message: "Oh, I missed it! When's the next one?",
-          timestamp: new Date("2023-05-10T11:35:00"),
-        },
-      ],
-      location: "Community Center",
-      popularity: 8,
-      coordinates: { lat: 40.7589, lng: -73.9851 },
-      peoplePresent: 3,
-    },
-    {
-      id: 3,
-      title: "New Health Restaurant",
-      messages: [
-        {
-          id: 1,
-          user: "Eve",
-          avatar: "E",
-          message: "New healthy restaurant opened on 5th Ave. Who wants to check it out?",
-          timestamp: new Date("2023-05-10T12:00:00"),
-        },
-        {
-          id: 2,
-          user: "Frank",
-          avatar: "F",
-          message: "I'm interested! What's the name of the place?",
-          timestamp: new Date("2023-05-10T12:10:00"),
-        },
-        {
-          id: 3,
-          user: "Eve",
-          avatar: "E",
-          message: "It's called 'Green Eats'. Shall we go tomorrow?",
-          timestamp: new Date("2023-05-10T12:15:00"),
-        },
-      ],
-      location: "5th Avenue",
-      popularity: 12,
-      coordinates: { lat: 40.7612, lng: -73.9777 },
-      peoplePresent: 7,
-    },
-  ]
 
   const sortThreads = (threads: ChatThread[]) => {
     switch (sortBy) {
@@ -152,7 +114,7 @@ export default function ExplorePage() {
         return [...threads].sort(
           (a, b) =>
             b.messages[b.messages.length - 1].timestamp.getTime() -
-            a.messages[a.messages.length - 1].timestamp.getTime(),
+            a.messages[a.messages.length - 1].timestamp.getTime()
         )
       case "popular":
         return [...threads].sort((a, b) => b.popularity - a.popularity)
@@ -184,10 +146,6 @@ export default function ExplorePage() {
     }
   }
 
-  const handleBackToThreads = () => {
-    setSelectedThread(null)
-  }
-
   const handleCreateNewThread = () => {
     if (newThreadTitle.trim()) {
       const newThread: ChatThread = {
@@ -196,7 +154,7 @@ export default function ExplorePage() {
         messages: [],
         location: "New Location",
         popularity: 0,
-        coordinates: { lat: 0, lng: 0 },
+        coordinates: userLocation || defaultCenter,
         peoplePresent: 1,
       }
       chatThreads.push(newThread)
@@ -204,6 +162,11 @@ export default function ExplorePage() {
       setShowNewThreadDialog(false)
       setSelectedThread(newThread)
     }
+  }
+
+  const handleDirectMessage = (user: string) => {
+    setDirectMessageRecipient(user)
+    setShowDirectMessageDialog(true)
   }
 
   const handleSendDirectMessage = () => {
@@ -220,15 +183,99 @@ export default function ExplorePage() {
     setShowMapDialog(true)
   }
 
-  const handleDirectMessage = (user: string) => {
-    setDirectMessageRecipient(user)
-    setShowDirectMessageDialog(true)
+  const handleBackToThreads = () => {
+    setSelectedThread(null)
   }
+
+  const chatThreads: ChatThread[] = [
+    {
+      id: 1,
+      title: "Downtown Walking Group",
+      messages: [
+        {
+          id: 1,
+          user: "Sarah",
+          avatar: "S",
+          message: "Beautiful day for a walk downtown! Anyone want to join?",
+          timestamp: new Date("2025-02-23T09:00:00"),
+        },
+        {
+          id: 2,
+          user: "Mike",
+          avatar: "M",
+          message: "I'm in! Where should we meet?",
+          timestamp: new Date("2025-02-23T09:05:00"),
+        },
+      ],
+      location: "Downtown Mall",
+      popularity: 12,
+      coordinates: { lat: 38.0293, lng: -78.4767 }, // Charlottesville coordinates
+      peoplePresent: 4,
+    },
+    {
+      id: 2,
+      title: "UVA Gardens Group",
+      messages: [
+        {
+          id: 1,
+          user: "Emily",
+          avatar: "E",
+          message: "Morning walk through the gardens?",
+          timestamp: new Date("2025-02-23T08:30:00"),
+        },
+      ],
+      location: "UVA Gardens",
+      popularity: 8,
+      coordinates: { lat: 38.0356, lng: -78.5070 },
+      peoplePresent: 2,
+    },
+    {
+      id: 3,
+      title: "Rivanna Trail Hikers",
+      messages: [
+        {
+          id: 1,
+          user: "David",
+          avatar: "D",
+          message: "Starting a trail walk in 30 minutes",
+          timestamp: new Date("2025-02-23T07:45:00"),
+        },
+        {
+          id: 2,
+          user: "Lisa",
+          avatar: "L",
+          message: "Perfect timing! I'll be there",
+          timestamp: new Date("2025-02-23T07:50:00"),
+        },
+      ],
+      location: "Rivanna Trail",
+      popularity: 15,
+      coordinates: { lat: 38.0401, lng: -78.4712 },
+      peoplePresent: 6,
+    },
+    {
+      id: 4,
+      title: "IX Art Park Social",
+      messages: [
+        {
+          id: 1,
+          user: "Alex",
+          avatar: "A",
+          message: "Art walk and light exercise at IX Art Park",
+          timestamp: new Date("2025-02-23T10:00:00"),
+        },
+      ],
+      location: "IX Art Park",
+      popularity: 10,
+      coordinates: { lat: 38.0279, lng: -78.4849 },
+      peoplePresent: 3,
+    },
+  ]
 
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-white">City Exploration</h1>
-
+  
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="bg-card border-secondary">
           <CardHeader>
@@ -237,12 +284,81 @@ export default function ExplorePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64 bg-accent rounded-md flex items-center justify-center">
-              Map View (Integration required)
+            <div className="h-64 bg-accent rounded-md">
+              {loadError ? (
+                <div className="h-full flex items-center justify-center text-red-500">
+                  Error loading maps: {loadError.message}
+                </div>
+              ) : !isLoaded ? (
+                <div className="h-full flex items-center justify-center">
+                  Loading maps...
+                </div>
+              ) : (
+                <GoogleMap
+                  mapContainerStyle={mapContainerStyle}
+                  center={userLocation || defaultCenter}
+                  zoom={13}
+                  options={{
+                    styles: [
+                      {
+                        elementType: "geometry",
+                        stylers: [{ color: "#242f3e" }]
+                      },
+                      {
+                        elementType: "labels.text.stroke",
+                        stylers: [{ color: "#242f3e" }]
+                      },
+                      {
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#746855" }]
+                      }
+                    ],
+                    streetViewControl: false,
+                    mapTypeControl: false
+                  }}
+                >
+                  {userLocation && (
+                    <Marker
+                      position={userLocation}
+                      icon={{
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 7,
+                        fillColor: "#4285F4",
+                        fillOpacity: 1,
+                        strokeColor: "#ffffff",
+                        strokeWeight: 2,
+                      }}
+                    />
+                  )}
+                  
+                  {chatThreads.map((thread) => (
+                    <Marker
+                      key={thread.id}
+                      position={thread.coordinates}
+                      onClick={() => setSelectedMapLocation(thread)}
+                    />
+                  ))}
+  
+                  {selectedMapLocation && (
+                    <InfoWindow
+                      position={selectedMapLocation.coordinates}
+                      onCloseClick={() => setSelectedMapLocation(null)}
+                    >
+                      <div className="text-black p-2">
+                        <h3 className="font-bold">{selectedMapLocation.title}</h3>
+                        <p>{selectedMapLocation.location}</p>
+                        <p className="text-sm text-gray-600">
+                          {selectedMapLocation.peoplePresent} people here
+                        </p>
+                      </div>
+                    </InfoWindow>
+                  )}
+                </GoogleMap>
+              )}
             </div>
           </CardContent>
         </Card>
-
+  
         <Card className="bg-card border-secondary">
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -259,7 +375,7 @@ export default function ExplorePage() {
           </CardContent>
         </Card>
       </div>
-
+  
       <Card className="bg-card border-secondary">
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -271,7 +387,7 @@ export default function ExplorePage() {
             <Switch id="walking-mode" checked={walkingMode} onCheckedChange={toggleWalkingMode} />
             <Label htmlFor="walking-mode">Activate Walking Mode</Label>
           </div>
-
+  
           <div className="space-y-2">
             <Label htmlFor="intensity">Intensity</Label>
             <Slider
@@ -285,13 +401,13 @@ export default function ExplorePage() {
             />
             <div className="text-sm text-muted-foreground">Current Intensity: {intensity}%</div>
           </div>
-
+  
           <Button onClick={toggleWalkingMode} className="w-full">
             {walkingMode ? "Stop" : "Go"}
           </Button>
         </CardContent>
       </Card>
-
+  
       <Card className="bg-card border-secondary">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
@@ -424,67 +540,58 @@ export default function ExplorePage() {
           )}
         </CardContent>
       </Card>
-
-      <Dialog open={showNewThreadDialog} onOpenChange={setShowNewThreadDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create a New Thread</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Thread Title"
-              value={newThreadTitle}
-              onChange={(e) => setNewThreadTitle(e.target.value)}
-            />
-            <Button onClick={handleCreateNewThread}>Create Thread</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showDirectMessageDialog} onOpenChange={setShowDirectMessageDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Send a Direct Message</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Recipient"
-              value={directMessageRecipient}
-              onChange={(e) => setDirectMessageRecipient(e.target.value)}
-            />
-            <Input placeholder="Message" value={directMessage} onChange={(e) => setDirectMessage(e.target.value)} />
-            <Button onClick={handleSendDirectMessage}>Send Message</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
+  
       <Dialog open={showMapDialog} onOpenChange={setShowMapDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{selectedMapThread?.title} Location</DialogTitle>
-          </DialogHeader>
-          {selectedMapThread && (
-            <>
-              <div className="relative h-[300px] bg-accent rounded-md overflow-hidden mb-4">
-                <Image
-                  src={`https://api.mapbox.com/styles/v1/mapbox/dark-v10/static/pin-s+c48aed(${selectedMapThread.coordinates.lng},${selectedMapThread.coordinates.lat})/${selectedMapThread.coordinates.lng},${selectedMapThread.coordinates.lat},13,0/600x300@2x?access_token=pk.eyJ1IjoiZXhhbXBsZXVzZXIiLCJhIjoiY2xqcnR1a2VqMDR3YTNkbzR1aW9uNnhsbiJ9.Fh0Vl_0Br9TtPJUZKJZZVQ`}
-                  alt={`Map of ${selectedMapThread.location}`}
-                  layout="fill"
-                  objectFit="cover"
-                />
-              </div>
-              <div className="flex justify-between items-center">
-                <p className="text-sm text-muted-foreground">{selectedMapThread.location}</p>
-                <p className="text-sm font-medium flex items-center">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-                  <Users className="inline-block mr-1 h-4 w-4" />
-                  {selectedMapThread.peoplePresent} people here now
-                </p>
-              </div>
-            </>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>{selectedMapThread?.title} Location</DialogTitle>
+    </DialogHeader>
+    {selectedMapThread && (
+      <>
+        <div className="h-[300px] bg-accent rounded-md overflow-hidden mb-4">
+          {isLoaded && (
+            <GoogleMap
+              mapContainerStyle={{ width: '100%', height: '100%' }}
+              center={selectedMapThread.coordinates}
+              zoom={15}
+              options={{
+                styles: [
+                  {
+                    elementType: "geometry",
+                    stylers: [{ color: "#242f3e" }]
+                  },
+                  {
+                    elementType: "labels.text.stroke",
+                    stylers: [{ color: "#242f3e" }]
+                  },
+                  {
+                    elementType: "labels.text.fill",
+                    stylers: [{ color: "#746855" }]
+                  }
+                ],
+                streetViewControl: false,
+                mapTypeControl: false
+              }}
+            >
+              <Marker
+                position={selectedMapThread.coordinates}
+                onClick={() => setSelectedMapLocation(selectedMapThread)}
+              />
+            </GoogleMap>
           )}
-        </DialogContent>
-      </Dialog>
+        </div>
+        <div className="flex justify-between items-center">
+          <p className="text-sm text-muted-foreground">{selectedMapThread.location}</p>
+          <p className="text-sm font-medium flex items-center">
+            <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+            <Users className="inline-block mr-1 h-4 w-4" />
+            {selectedMapThread.peoplePresent} people here now
+          </p>
+        </div>
+      </>
+    )}
+  </DialogContent>
+</Dialog>
     </div>
   )
 }
